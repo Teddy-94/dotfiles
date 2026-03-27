@@ -1,0 +1,50 @@
+#!/bin/bash
+
+PROJECTS_DIR="$HOME/projects"
+
+# 1. Get the raw lists
+running_sessions=$(tmux list-sessions -F "#S" 2>/dev/null)
+all_projects=$(find "$PROJECTS_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+
+# 2. Prepare the list for fzf with icons
+# We loop through all projects; if it's in running_sessions, add a green dot
+combined_list=""
+for proj in $all_projects; do
+    if echo "$running_sessions" | grep -q "^$proj$"; then
+        combined_list+="(ACTIVE) $proj\n"
+    else
+        combined_list+="         $proj\n"
+    fi
+done
+
+# 3. Pick from the list
+choice_line=$(echo -e "$combined_list" | sort -r | fzf --prompt="Project > " --ansi)
+
+[[ -z "$choice_line" ]] && exit 0
+
+# 4. Clean the choice (remove the icon/label to get just the folder name)
+choice=$(echo "$choice_line" | sed 's/(ACTIVE) //g' | xargs)
+session_name=$(echo "$choice" | tr . _)
+target_path="$PROJECTS_DIR/$choice"
+
+# 5. The Switch/Create Logic (Same as before)
+if tmux has-session -t "$session_name" 2>/dev/null; then
+    if [[ -z "$TMUX" ]]; then
+        tmux attach-session -t "$session_name"
+    else
+        tmux switch-client -t "$session_name"
+    fi
+else
+    tmux new-session -d -s "$session_name" -c "$target_path" -n "workspace"
+    tmux send-keys -t "$session_name:workspace.0" "nvim ." Enter
+    tmux split-window -h -p 40 -t "$session_name:workspace" -c "$target_path"
+    tmux send-keys -t "$session_name:workspace.1" "claude" Enter
+    tmux split-window -v -t "$session_name:workspace.1" -c "$target_path"
+    tmux select-pane -t "$session_name:workspace.0"
+
+    if [[ -z "$TMUX" ]]; then
+        tmux attach-session -t "$session_name"
+    else
+        tmux switch-client -t "$session_name"
+    fi
+fi
