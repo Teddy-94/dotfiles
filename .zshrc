@@ -1,13 +1,27 @@
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH="$PATH:/Users/teodoradolfsson/.local/bin"
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-source ~/.rdey-shell-extensions/zsh/functions.zsh
+eval "$(fnm env --use-on-cd --shell zsh)"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# Load nvm from Homebrew's location
+[ -s "$(brew --prefix nvm)/nvm.sh" ] && \. "$(brew --prefix nvm)/nvm.sh"
+
+# Load nvm bash_completion from Homebrew's location
+[ -s "$(brew --prefix nvm)/etc/bash_completion.d/nvm" ] && \. "$(brew --prefix nvm)/etc/bash_completion.d/nvm"
+
+# Add Bob's Neovim proxy binary to PATH
+export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+
+export PATH="$PATH:/Users/teodoradolfsson/Library/Python/3.12/bin"
+
+export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 
 # alias
 alias dc="docker-compose"
@@ -20,9 +34,7 @@ alias gdf="git diff --color-words"
 alias gdt="git difftool"
 alias gl="git log -10 --pretty=oneline"
 
-alias ecs="rdeyqa ecs --fix"
-alias stan="rdeyqa phpstan"
-alias phpunit="rdeyqa phpunit"
+alias tm="~/.local/bin/tm-open"
 
 # Git info in prompt
 setopt prompt_subst
@@ -46,3 +58,23 @@ precmd() {
     fi
 }
 
+# pnpm
+export PNPM_HOME="/Users/teodoradolfsson/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+
+# The next line updates PATH for the Google Cloud SDK.
+export PATH=/opt/homebrew/share/google-cloud-sdk/bin:"$PATH"
+
+
+# bun completions
+[ -s "/Users/teodoradolfsson/.bun/_bun" ] && source "/Users/teodoradolfsson/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
